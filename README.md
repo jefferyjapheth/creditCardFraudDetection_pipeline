@@ -116,3 +116,58 @@ All services run on `dataplatform_net` bridge network for secure internal commun
    ```
 
 That will drop `creditcard.csv` into `./data/`, and you can work with it
+
+
+# Fraud Simulator
+
+This project contains a Python script to generate **simulated fraud transaction data** and optionally upload it to a **MinIO/S3 bucket**. The simulation can generate transactions for a recent time window (e.g., last 15 minutes) with multiple fraud scenarios.
+
+---
+
+## Summary of `fraud_simulator.py`
+
+- Generates customer and terminal profiles with random locations.
+- Associates customers with nearby terminals.
+- Simulates transactions with fraud scenarios:
+  - **Baseline fraud:** random low-probability fraud.
+  - **High-amount anomaly:** unusually large transaction amounts.
+  - **Geographic fraud:** transactions on terminals far from the customer's usual area.
+  - **Bursting fraud:** sequences of suspicious transactions in quick succession.
+- Splits transactions into CSV **batches**.
+- Saves batches to a **local folder** (default: `data/out_batches`).
+- Optionally uploads the batches to a **MinIO/S3 bucket**.
+
+
+
+## Run the Simulator
+
+Generate transactions for the **last 15 minutes** and upload:
+
+```bash
+python src/fraud_simulator.py \
+    --n-customers 500 \
+    --n-terminals 1000 \
+    --batch-size 5000 \
+    --bucket $MINIO_BUCKET \
+    --minio-endpoint http://localhost:9000 \
+    --minio-access $MINIO_USER \
+    --minio-secret $MINIO_PASSWORD \
+    --upload \
+    --window-minutes 15
+```
+
+* Default local output: `data/out_batches/`
+* CSV batches are uploaded to the specified S3 bucket if `--upload` is used.
+
+---
+
+## Notes
+
+* Increase `--n-customers` / `--n-terminals` for larger datasets.
+* Adjust `--batch-size` to split transactions into smaller CSV files.
+* The script randomly injects fraud using multiple scenarios.
+
+
+
+
+
