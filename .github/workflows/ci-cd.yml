@@ -1,0 +1,85 @@
+name: Test Fraud Simulator with Docker Compose
+
+on:
+  push:
+    branches:
+      # - dev
+      - feature/data_ingestion
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  test-upload:
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+      PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+      PGADMIN_PORT: ${{ secrets.PGADMIN_PORT }}
+      MINIO_USER: ${{ secrets.MINIO_USER }}
+      MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
+      MINIO_BUCKET: ${{ secrets.MINIO_BUCKET }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.24.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose version
+
+      - name: Create .env file for Docker Compose
+        run: |
+          cat <<EOF > .env
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          POSTGRES_DB=${POSTGRES_DB}
+          PGADMIN_EMAIL=${PGADMIN_EMAIL}
+          PGADMIN_PASSWORD=${PGADMIN_PASSWORD}
+          PGADMIN_PORT=${PGADMIN_PORT}
+          MINIO_USER=${MINIO_USER}
+          MINIO_PASSWORD=${MINIO_PASSWORD}
+          MINIO_BUCKET=${MINIO_BUCKET}
+          EOF
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start MinIO and dependencies with Docker Compose
+        run: |
+          docker-compose -f docker-compose.override.yml up -d minio mc
+
+      - name: Wait for MinIO to be healthy
+        run: |
+          for i in {1..10}; do
+            curl -f http://localhost:9000/minio/health/live && break
+            sleep 5
+          done
+
+      - name: Run fraud simulator and upload to MinIO
+        run: |
+          python src/fraud_simulator.py \
+            --n-customers 500 \
+            --n-terminals 1000 \
+            --batch-size 5000 \
+            --bucket $MINIO_BUCKET \
+            --minio-endpoint http://localhost:9000 \
+            --minio-access $MINIO_USER \
+            --minio-secret $MINIO_PASSWORD \
+            --upload \
+            --window-minutes 15
+
+      - name: Tear down services
+        if: always()
+        run: docker-compose -f docker-compose.override.yml down

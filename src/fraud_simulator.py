@@ -202,12 +202,14 @@ def generate_dataset(n_customers=500, n_terminals=1000,
     for a recent time window (e.g., last `window_minutes` minutes).
     """
 
-    # 1️⃣ Generate profiles
+
+    #  Generate profiles
     customers = generate_customer_profiles_table(n_customers, random_state=seed)
     terminals = generate_terminal_profiles_table(n_terminals, random_state=seed)
     customers = associate_terminals(customers, terminals, r=r, use_kdtree=use_kdtree)
 
-    # 2️⃣ Generate transactions for all customers
+
+    #  Generate transactions for all customers
     tx_list = []
     iterator = customers.itertuples(index=False)
     if show_progress:
@@ -224,7 +226,7 @@ def generate_dataset(n_customers=500, n_terminals=1000,
         if not df_c.empty:
             tx_list.append(df_c)
 
-    # 3️⃣ Aggregate and sort transactions
+    #  Aggregate and sort transactions
     if tx_list:
         transactions = pd.concat(tx_list, ignore_index=True)
         transactions = transactions.sort_values("TX_DATETIME").reset_index(drop=True)
