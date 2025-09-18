@@ -14,9 +14,15 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MINIO_BUCKET: ${{ secrets.MINIO_BUCKET }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      PGADMIN_EMAIL: ${{ secrets.PGADMIN_EMAIL }}
+      PGADMIN_PASSWORD: ${{ secrets.PGADMIN_PASSWORD }}
+      PGADMIN_PORT: ${{ secrets.PGADMIN_PORT }}
       MINIO_USER: ${{ secrets.MINIO_USER }}
       MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
+      MINIO_BUCKET: ${{ secrets.MINIO_BUCKET }}
 
     steps:
       - name: Checkout code
