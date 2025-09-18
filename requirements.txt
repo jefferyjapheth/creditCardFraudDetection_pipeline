@@ -1,0 +1,8 @@
+# Astro Runtime includes the following pre-installed providers packages: https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
+pandas
+numpy
+boto3
+tqdm
+psycopg2-binary   # for Postgres (Gold layer)
+pyarrow           # if saving parquet instead of CSV
+pyiceberg         # Python client for Apache Iceberg
