@@ -1,0 +1,56 @@
+name: Test Fraud Simulator with Docker Compose
+
+on:
+  push:
+    branches:
+      # - dev
+      - feature/dat_ingestion
+
+jobs:
+  test-upload:
+    runs-on: ubuntu-latest
+
+    env:
+      MINIO_BUCKET: ${{ secrets.MINIO_BUCKET }}
+      MINIO_USER: ${{ secrets.MINIO_USER }}
+      MINIO_PASSWORD: ${{ secrets.MINIO_PASSWORD }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Start MinIO and dependencies with Docker Compose
+        run: |
+          docker-compose -f docker-compose.override.yml up -d minio mc
+
+      - name: Wait for MinIO to be healthy
+        run: |
+          for i in {1..10}; do
+            curl -f http://localhost:9000/minio/health/live && break
+            sleep 5
+          done
+
+      - name: Run fraud simulator and upload to MinIO
+        run: |
+          python src/fraud_simulator.py \
+            --n-customers 500 \
+            --n-terminals 1000 \
+            --batch-size 5000 \
+            --bucket $MINIO_BUCKET \
+            --minio-endpoint http://localhost:9000 \
+            --minio-access $MINIO_USER \
+            --minio-secret $MINIO_PASSWORD \
+            --upload \
+            --window-minutes 15
+
+      - name: Tear down services
+        if: always()
+        run: docker-compose -f docker-compose.override.yml down
