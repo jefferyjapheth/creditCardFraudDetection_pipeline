@@ -4,7 +4,10 @@ on:
   push:
     branches:
       # - dev
-      - feature/dat_ingestion
+      - feature/data_ingestion
+  pull_request:
+    branches:
+      - dev
 
 jobs:
   test-upload:
