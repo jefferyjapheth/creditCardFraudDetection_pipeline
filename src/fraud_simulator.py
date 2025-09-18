@@ -202,10 +202,12 @@ def generate_dataset(n_customers=500, n_terminals=1000,
     for a recent time window (e.g., last `window_minutes` minutes).
     """
 
+
     #  Generate profiles
     customers = generate_customer_profiles_table(n_customers, random_state=seed)
     terminals = generate_terminal_profiles_table(n_terminals, random_state=seed)
     customers = associate_terminals(customers, terminals, r=r, use_kdtree=use_kdtree)
+
 
     #  Generate transactions for all customers
     tx_list = []
