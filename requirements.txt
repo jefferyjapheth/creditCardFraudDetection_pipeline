@@ -6,3 +6,8 @@ tqdm
 psycopg2-binary   # for Postgres (Gold layer)
 pyarrow           # if saving parquet instead of CSV
 pyiceberg         # Python client for Apache Iceberg
+astro-sdk-python>=1.6.0 # Astro SDK for interacting with Astro and Airflow features
+apache-airflow-providers-amazon
+apache-airflow-providers-postgres
+apache-airflow-providers-http
+apache-airflow-providers-sftp

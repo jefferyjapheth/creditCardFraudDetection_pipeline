@@ -77,19 +77,23 @@ services:
   mc:
     image: minio/mc
     restart: on-failure
-    # container_name: mc                   # optional
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc alias set localminio http://minio:9000 ${MINIO_USER} ${MINIO_PASSWORD} &&
-      /usr/bin/mc mb --ignore-existing localminio/${MINIO_BUCKET} &&
-      /usr/bin/mc policy set public localminio/${MINIO_BUCKET} &&
+      /usr/bin/mc mb --ignore-existing localminio/${MINIO_BUCKET_RAW} &&
+      /usr/bin/mc mb --ignore-existing localminio/${MINIO_BUCKET_STAGING} &&
+      /usr/bin/mc mb --ignore-existing localminio/${MINIO_BUCKET_ARCHIVE} &&
+      /usr/bin/mc policy set public localminio/${MINIO_BUCKET_RAW} &&
+      /usr/bin/mc policy set public localminio/${MINIO_BUCKET_STAGING} &&
+      /usr/bin/mc policy set public localminio/${MINIO_BUCKET_ARCHIVE} &&
       tail -f /dev/null
       "
     networks:
       - dataplatform_net
+
 
 volumes:
   postgres-data:
